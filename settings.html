@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Shop Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="settings-page">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-store"></i> <span id="shopNameHeader">Shop Name</span></h2>
+            <div class="user-info">
+                <div class="user-name" id="userName">Loading...</div>
+                <div class="user-role" id="userRole">Shop Admin</div>
+            </div>
+        </div>
+
+        <ul class="nav-links">
+            <!-- Menu items will be loaded dynamically by MenuManager -->
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <nav class="navbar">
+            <div class="navbar-left">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h3>Shop Settings <span id="shopIdDisplay" class="text-muted"
+                        style="font-size: 0.8rem; font-weight: normal; margin-left: 10px;"></span></h3>
+            </div>
+        </nav>
+
+        <div class="content">
+            <!-- Settings Tabs -->
+            <div class="settings-tabs">
+                <button class="tab-btn active" data-tab="shop-info">Shop Information</button>
+                <button class="tab-btn" data-tab="business">Business Settings</button>
+                <button class="tab-btn" data-tab="pos">POS Settings</button>
+                <button class="tab-btn" data-tab="notifications">Notifications</button>
+                <button class="tab-btn" data-tab="backup">Backup & Export</button>
+            </div>
+
+            <!-- Shop Information Tab -->
+            <div class="tab-content active" id="shop-info">
+                <div class="settings-card">
+                    <h4><i class="fas fa-store"></i> Shop Details</h4>
+
+                    <form id="shopInfoForm">
+                        <div class="form-group">
+                            <label>Shop Name *</label>
+                            <input type="text" id="shopName" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Shop Address</label>
+                            <textarea id="shopAddress" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="shopPhone">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Shop Logo</label>
+                            <div class="logo-upload">
+                                <div class="logo-preview">
+                                    <img id="logoPreview" src="assets/default-shop-logo.png" alt="Shop Logo">
+                                </div>
+                                <div class="logo-actions">
+                                    <button type="button" class="btn btn-sm btn-action" id="uploadLogoBtn">
+                                        <i class="fas fa-upload"></i> Upload Logo
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-action btn-danger" id="removeLogoBtn">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                    <input type="file" id="logoFile" accept="image/*" style="display: none;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-action">
+                            <i class="fas fa-save"></i> Save Information
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Business Settings Tab -->
+            <div class="tab-content" id="business">
+                <div class="settings-card">
+                    <h4><i class="fas fa-business-time"></i> Business Settings</h4>
+
+                    <form id="businessForm">
+                        <div class="form-group">
+                            <label>Currency *</label>
+                            <select id="shopCurrency" required>
+                                <option value="INR" selected>Indian Rupee (₹)</option>
+                                <option value="USD">US Dollar ($)</option>
+                                <option value="EUR">Euro (€)</option>
+                                <option value="GBP">British Pound (£)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tax Rate (%)</label>
+                            <input type="number" id="taxRate" step="0.01" min="0" value="18">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Default Profit Margin (%)</label>
+                            <input type="number" id="profitMargin" step="0.01" min="0" value="30">
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="enableTax" checked>
+                                <label for="enableTax">Enable Tax Calculation</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="enableLowStockAlert" checked>
+                                <label for="enableLowStockAlert">Enable Low Stock Alerts</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Low Stock Alert Threshold</label>
+                            <input type="number" id="lowStockThreshold" min="1" value="10">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Current Balance (Cash in Hand)</label>
+                            <input type="number" id="shopAsset" step="0.01" value="0">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-action">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- POS Settings Tab -->
+            <div class="tab-content" id="pos">
+                <div class="settings-card">
+                    <h4><i class="fas fa-cash-register"></i> POS Settings</h4>
+
+                    <form id="posForm">
+                        <div class="form-group">
+                            <label>Default Payment Method</label>
+                            <select id="defaultPaymentMethod">
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="credit">Credit</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="enableBarcodeScanner" checked>
+                                <label for="enableBarcodeScanner">Enable Barcode Scanner</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="enableQuickSale" checked>
+                                <label for="enableQuickSale">Enable Quick Sale Mode</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="autoPrintInvoice" checked>
+                                <label for="autoPrintInvoice">Auto Print Invoice</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Receipt Header Text</label>
+                            <textarea id="receiptHeader" rows="2">Thank you for shopping with us!</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Receipt Footer Text</label>
+                            <textarea id="receiptFooter" rows="2">Please visit again!</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-action">
+                            <i class="fas fa-save"></i> Save POS Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Backup & Export Tab -->
+            <div class="tab-content" id="backup">
+                <div class="settings-card">
+                    <h4><i class="fas fa-database"></i> Backup & Export</h4>
+
+                    <div class="backup-options">
+                        <div class="backup-card">
+                            <div class="backup-icon">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <div class="backup-info">
+                                <h5>Export All Data to Excel</h5>
+                                <p>Export products, sales, expenses, and credit data</p>
+                                <button class="btn btn-success btn-action" id="exportAllDataBtn">
+                                    <i class="fas fa-download"></i> Export All
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="backup-card">
+                            <div class="backup-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="backup-info">
+                                <h5>Export Reports to PDF</h5>
+                                <p>Generate PDF reports for sales, expenses, and inventory</p>
+                                <button class="btn btn-danger btn-action" id="exportPdfReportsBtn">
+                                    <i class="fas fa-download"></i> Generate PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="backup-card">
+                            <div class="backup-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="backup-info">
+                                <h5>Backup to Cloud</h5>
+                                <p>Create a backup of all shop data to Supabase</p>
+                                <button class="btn btn-primary btn-action" id="backupToCloudBtn">
+                                    <i class="fas fa-upload"></i> Backup Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="backup-card">
+                            <div class="backup-icon">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="backup-info">
+                                <h5>Auto Backup Settings</h5>
+                                <div class="form-check">
+                                    <input type="checkbox" id="enableAutoBackup">
+                                    <label for="enableAutoBackup">Enable Daily Auto Backup</label>
+                                </div>
+                                <select id="backupTime" class="form-control">
+                                    <option value="00:00">12:00 AM</option>
+                                    <option value="03:00">3:00 AM</option>
+                                    <option value="06:00">6:00 AM</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="backup-history">
+                        <h5><i class="fas fa-history"></i> Recent Backups</h5>
+                        <div class="backups-list" id="backupsList">
+                            <div class="empty-state">
+                                <i class="fas fa-database fa-2x"></i>
+                                <p>No backups found</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/menu-manager.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+
+</html>
