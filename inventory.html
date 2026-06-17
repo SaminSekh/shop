@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory - Shop Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="inventory-page">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-store"></i> <span id="shopNameHeader">Shop Name</span></h2>
+            <div class="user-info">
+                <div class="user-name" id="userName">Loading...</div>
+                <div class="user-role" id="userRole">Shop Admin</div>
+            </div>
+        </div>
+
+        <ul class="nav-links">
+            <!-- Menu items will be loaded dynamically by MenuManager -->
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <nav class="navbar">
+            <div class="navbar-left">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h3>Inventory</h3>
+            </div>
+            <div class="navbar-right">
+                <button class="btn btn-primary btn-action" id="addProductBtn">
+                    <i class="fas fa-plus"></i> Add Product
+                </button>
+                <button class="btn btn-success btn-action" id="exportInventoryBtn">
+                    <i class="fas fa-file-excel"></i> Export
+                </button>
+            </div>
+        </nav>
+
+        <div class="content">
+            <!-- Inventory Controls -->
+            <div class="inventory-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="inventorySearch" placeholder="Search products...">
+                </div>
+
+                <div class="filter-options">
+                    <select id="stockFilter" class="form-control">
+                        <option value="all">All Stock</option>
+                        <option value="low">Low Stock (< 10)</option>
+                        <option value="out">Out of Stock</option>
+                        <option value="in">In Stock</option>
+                    </select>
+
+                    <select id="categoryFilter" class="form-control">
+                        <option value="">All Categories</option>
+                    </select>
+
+                    <select id="typeFilter" class="form-control" style="display: none;">
+                        <option value="">All Types</option>
+                    </select>
+
+                    <button class="btn btn-secondary" id="refreshInventory">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Inventory Stats -->
+            <div class="inventory-stats">
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="fas fa-cubes"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Products</h3>
+                        <div class="value" id="totalProducts">0</div>
+                        <div style="font-size:0.75rem;color:#64748b;margin-top:3px;">
+                            <i class="fas fa-layer-group" style="font-size:0.7rem;"></i>
+                            <span id="totalStockCount">0</span> units in stock
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Low Stock</h3>
+                        <div class="value" id="lowStockCount">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Out of Stock</h3>
+                        <div class="value" id="outOfStockCount">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Inventory Value</h3>
+                        <div class="value" id="inventoryValue">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAllProducts">
+                            </th>
+                            <th>Product Name</th>
+                            <th>SKU</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Stock</th>
+                            <th>Cost Price</th>
+                            <th>Selling Price</th>
+                            <th>Profit Margin</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTable">
+                        <tr>
+                            <td colspan="11" class="text-center">Loading products...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bulk Action Bar -->
+    <div id="bulkActionBar" class="bulk-action-bar">
+        <div class="bulk-info">
+            <span id="selectedCount">0</span> items selected
+        </div>
+        <div class="bulk-buttons">
+            <button class="btn btn-primary btn-action" id="bulkEditBtn">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="btn btn-danger btn-action" id="bulkDeleteBtn">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+            <button class="btn btn-secondary btn-action" id="cancelSelection">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Modal -->
+    <div class="modal" id="bulkEditModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-layer-group"></i> Bulk Edit Products</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Only fields you change will be updated for the <strong
+                        id="bulkEditCount">0</strong> selected products.
+                </div>
+                <form id="bulkEditForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-tags"></i> Category</label>
+                            <select id="bulkCategory" class="field-toggle-target">
+                                <option value="">No Change</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-list"></i> Type</label>
+                            <select id="bulkType" class="field-toggle-target">
+                                <option value="">No Change</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-money-bill"></i> Cost Price</label>
+                            <div class="input-with-action">
+                                <input type="number" id="bulkCostPrice" step="0.01" placeholder="Leave for no change">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> Selling Price</label>
+                            <div class="input-with-action">
+                                <input type="number" id="bulkSellingPrice" step="0.01"
+                                    placeholder="Leave for no change">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-box"></i> Stock Adjustment</label>
+                            <div class="sku-input-group">
+                                <select id="stockAction" style="width: 100px;">
+                                    <option value="set">Set To</option>
+                                    <option value="add">Add (+)</option>
+                                    <option value="sub">Subtract (-)</option>
+                                </select>
+                                <input type="number" id="bulkStockValue" placeholder="Value">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-exclamation-triangle"></i> Low Stock Alert</label>
+                            <input type="number" id="bulkLowStockAlert" placeholder="Leave for no change">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-sort-numeric-down"></i> Display Priority</label>
+                            <input type="number" id="bulkPriority" placeholder="Leave for no change">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-info-circle"></i> Description</label>
+                            <textarea id="bulkDescription" rows="1" placeholder="Leave for no change"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Show to Customers Toggle -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-store"></i> Show to Customers</label>
+                            <select id="bulkShowInStore">
+                                <option value="">No Change</option>
+                                <option value="true">Show (Visible)</option>
+                                <option value="false">Hide (Hidden)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Metadata Fields -->
+                    <div id="bulkDynamicFields" style="display: none;">
+                        <!-- Fields will be dynamically generated here -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-action close-modal">Cancel</button>
+                <button class="btn btn-primary btn-action" id="applyBulkUpdateBtn">
+                    <i class="fas fa-check-circle"></i> Apply
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/menu-manager.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/inventory.js"></script>
+
+    <!-- Product Modal (Add/Edit) -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-box"></i> Add New Product</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm">
+                    <input type="hidden" id="productId">
+
+                    <div class="product-photo-section">
+                        <label><i class="fas fa-images"></i> Product Images (Max 5)</label>
+                        <div class="product-images-grid" id="productImagesGrid">
+                            <!-- Image slots will be rendered here -->
+                            <div class="image-slot empty" onclick="window.inventoryManager.showImageSourcePicker()">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                        </div>
+                        <div class="photo-info" style="margin-top: 10px;">
+                            <small class="text-muted">First image will be the primary image. Click a slot to
+                                upload.</small>
+                        </div>
+                        <input type="file" id="productImageFile" accept="image/*" style="display: none;">
+                        <input type="file" id="productCameraFile" accept="image/*" capture="environment" style="display: none;">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-signature"></i> Product Name *</label>
+                            <input type="text" id="productName" placeholder="Enter product name" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-barcode"></i> SKU / Barcode *</label>
+                            <div class="sku-input-group">
+                                <input type="text" id="productSKU" placeholder="Enter or generate SKU" required>
+                                <button type="button" class="btn btn-secondary" id="generateSKU" title="Generate SKU">
+                                    <i class="fas fa-random"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-sort-amount-down"></i> Display Priority</label>
+                            <input type="number" id="productPriority" placeholder="0" value="0">
+                            <small class="text-muted">Directly control which product appears first on your public
+                                menu.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-tags"></i> Category</label>
+                            <select id="productCategory">
+                                <option value="Other">Other</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Food">Food</option>
+                                <option value="Stationery">Stationery</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-list-ul"></i> Product Type</label>
+                            <select id="productType">
+                                <option value="">Select Category First</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-cubes"></i> Stock Quantity *</label>
+                            <input type="number" id="productStock" min="0" value="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-exclamation-triangle"></i> Low Stock Alert</label>
+                            <input type="number" id="lowStockAlert" min="1" value="3">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-money-bill-wave"></i> Cost Price (Per unit)</label>
+                            <input type="number" id="costPrice" step="0.01" min="0" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> Selling Price *</label>
+                            <input type="number" id="sellingPrice" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div id="dynamicFields">
+                        <!-- Dynamic fields based on business type will be injected here -->
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-align-left"></i> Description</label>
+                        <textarea id="productDescription" rows="2"
+                            placeholder="Optional product description"></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="showInStore" checked 
+                                   style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                            <span><i class="fas fa-store"></i> Show to Customers</span>
+                        </label>
+                        <small class="text-muted">Uncheck to hide this product from your public store page.</small>
+                    </div>
+
+                    <!-- Variants Section -->
+                    <div class="form-group" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="enableVariants"
+                                   style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                            <span><i class="fas fa-layer-group"></i> This product has variants (sizes, colors, etc.)</span>
+                        </label>
+                        <small class="text-muted">Enable to add multiple variants. Each variant will be saved as a separate product with its own stock and price.</small>
+                    </div>
+
+                    <div id="variantsSection" style="display: none; margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #334155;">
+                                <i class="fas fa-palette"></i> Product Variants
+                            </h4>
+                            <button type="button" class="btn btn-sm btn-primary" id="addVariantBtn">
+                                <i class="fas fa-plus"></i> Add Variant
+                            </button>
+                        </div>
+                        <small class="text-muted" style="display: block; margin-bottom: 15px;">
+                            Add variants like colors, sizes, or flavors. Each variant has its own image, price, and stock. Customers will choose from these options.
+                        </small>
+                        <div id="variantsList">
+                            <!-- Variant rows will be added here -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger btn-action" id="deleteProductBtn" style="display: none;">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+                <div class="footer-actions">
+                    <button class="btn btn-secondary btn-action close-modal">Cancel</button>
+                    <button class="btn btn-primary btn-action" id="saveProductBtn" form="productForm">
+                        <i class="fas fa-save"></i> Save Product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Stat Card Breakdown Tooltip -->
+    <style>
+        #statBreakdownBox{position:fixed;z-index:9999;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15);padding:14px 16px;min-width:220px;max-width:280px;font-size:.8rem;pointer-events:none;opacity:0;transform:scale(.95) translateY(-4px);transition:opacity .15s ease,transform .15s ease}
+        #statBreakdownBox.visible{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
+        #statBreakdownBox .sb-title{font-weight:700;font-size:.75rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+        #statBreakdownBox .sb-title button{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;line-height:1;padding:0}
+        #statBreakdownBox .sb-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;gap:12px}
+        #statBreakdownBox .sb-row:last-child{border-bottom:none}
+        #statBreakdownBox .sb-row.divider{border-bottom:1px dashed #cbd5e1;padding:0;margin:4px 0}
+        #statBreakdownBox .sb-label{color:#64748b;flex:1}
+        #statBreakdownBox .sb-val{font-weight:700;color:#1e293b;white-space:nowrap}
+        .stat-card[data-breakdown]{cursor:context-menu}
+        .stat-card[data-breakdown]:hover{box-shadow:0 4px 20px rgba(0,0,0,.12)}
+    </style>
+    <script>
+    (function(){
+        var box=document.createElement('div');
+        box.id='statBreakdownBox';
+        document.body.appendChild(box);
+
+        function show(card,x,y){
+            var raw=card.getAttribute('data-breakdown');
+            if(!raw)return;
+            var rows;try{rows=JSON.parse(raw)}catch(e){return}
+            var title=card.querySelector('h3')?.textContent||'Breakdown';
+            box.innerHTML='<div class="sb-title"><span>📊 '+title+'</span><button onclick="document.getElementById(\'statBreakdownBox\').classList.remove(\'visible\')">×</button></div>'+
+                rows.map(function(r){
+                    if(String(r.label).startsWith('─'))return'<div class="sb-row divider"></div>';
+                    return'<div class="sb-row"><span class="sb-label">'+r.label+'</span><span class="sb-val">'+r.value+'</span></div>';
+                }).join('');
+            var bw=280,bh=300,vw=window.innerWidth,vh=window.innerHeight;
+            var left=x+12,top=y+12;
+            if(left+bw>vw-10)left=x-bw-12;
+            if(top+bh>vh-10)top=y-bh-12;
+            box.style.left=Math.max(8,left)+'px';
+            box.style.top=Math.max(8,top)+'px';
+            box.classList.add('visible');
+        }
+        function hide(){box.classList.remove('visible')}
+
+        document.addEventListener('contextmenu',function(e){
+            var card=e.target.closest('.stat-card[data-breakdown]');
+            if(card){e.preventDefault();show(card,e.clientX,e.clientY)}
+            else if(!e.target.closest('#statBreakdownBox'))hide();
+        });
+        document.addEventListener('click',function(e){
+            if(!e.target.closest('#statBreakdownBox')&&!e.target.closest('.stat-card[data-breakdown]'))hide();
+        });
+        var hoverTimer;
+        document.addEventListener('mouseover',function(e){
+            var card=e.target.closest('.stat-card[data-breakdown]');
+            if(card){clearTimeout(hoverTimer);hoverTimer=setTimeout(function(){var r=card.getBoundingClientRect();show(card,r.right-10,r.top)},600)}
+            else{clearTimeout(hoverTimer);}
+        });
+        document.addEventListener('mouseover',function(e){
+            // Keep box open when hovering over it
+            if(e.target.closest('#statBreakdownBox'))clearTimeout(hoverTimer);
+        });
+        document.addEventListener('mouseout',function(e){
+            var card=e.target.closest('.stat-card[data-breakdown]');
+            if(!card)return;
+            // Only hide if leaving the card entirely (not moving to a child)
+            var relTarget=e.relatedTarget;
+            if(relTarget&&(relTarget===card||card.contains(relTarget)||relTarget.closest('#statBreakdownBox')))return;
+            clearTimeout(hoverTimer);
+            hide();
+        });
+        var pressTimer;
+        document.addEventListener('touchstart',function(e){
+            var card=e.target.closest('.stat-card[data-breakdown]');
+            if(card)pressTimer=setTimeout(function(){var t=e.touches[0];show(card,t.clientX,t.clientY)},600);
+        },{passive:true});
+        document.addEventListener('touchend',function(){clearTimeout(pressTimer)});
+    })();
+    </script>
+
+    <!-- Product Detail Lightbox -->
+    <style>
+        #invLightboxOverlay {
+            display:none; position:fixed; inset:0; z-index:10000;
+            background:rgba(0,0,0,0.55); backdrop-filter:blur(4px);
+            align-items:center; justify-content:center; padding:16px;
+        }
+        #invLightboxOverlay.active { display:flex; }
+        #invLightbox {
+            background:#fff; border-radius:16px; width:100%; max-width:560px;
+            max-height:92vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.25);
+            animation:invLbIn 0.2s ease;
+        }
+        @keyframes invLbIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+        #invLightbox .ilb-header {
+            display:flex; align-items:center; gap:14px;
+            padding:18px 20px; border-bottom:1px solid #f1f5f9; position:relative; background:#f8fafc;
+            border-radius:16px 16px 0 0;
+        }
+        #invLightbox .ilb-header img {
+            width:60px; height:60px; border-radius:10px; object-fit:cover;
+            border:1px solid #e2e8f0; flex-shrink:0;
+        }
+        #invLightbox .ilb-title { font-size:1rem; font-weight:700; color:#1e293b; }
+        #invLightbox .ilb-sub   { font-size:0.78rem; color:#64748b; margin-top:3px; }
+        #invLightbox .ilb-close {
+            position:absolute; top:14px; right:14px;
+            background:#e2e8f0; border:none; border-radius:50%;
+            width:32px; height:32px; cursor:pointer; font-size:1rem;
+            display:flex; align-items:center; justify-content:center; color:#64748b;
+        }
+        #invLightbox .ilb-close:hover { background:#cbd5e1; }
+        #invLightbox .ilb-body  { padding:0 20px 20px; }
+        #invLightbox .ilb-section {
+            font-size:0.7rem; font-weight:700; text-transform:uppercase;
+            letter-spacing:0.6px; color:#94a3b8; margin:18px 0 8px;
+            padding-bottom:6px; border-bottom:1px solid #f1f5f9;
+        }
+        #invLightbox .ilb-row {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:7px 0; border-bottom:1px solid #f8fafc;
+        }
+        #invLightbox .ilb-row:last-child { border-bottom:none; }
+        #invLightbox .ilb-label { color:#64748b; font-size:0.82rem; }
+        #invLightbox .ilb-val   { font-weight:700; color:#1e293b; font-size:0.88rem; text-align:right; }
+        #invLightbox .ilb-val.green { color:#16a34a; }
+        #invLightbox .ilb-val.red   { color:#dc2626; }
+        #invLightbox .ilb-val.blue  { color:#2563eb; }
+        #invLightbox .ilb-loading {
+            text-align:center; padding:40px; color:#94a3b8;
+        }
+        #invLightbox .variant-row {
+            background:#f8fafc; border-radius:8px; padding:10px 12px;
+            margin-bottom:6px; font-size:0.82rem;
+        }
+        #invLightbox .variant-row .vr-name { font-weight:700; color:#1e293b; margin-bottom:4px; }
+        #invLightbox .variant-row .vr-meta { display:flex; gap:16px; flex-wrap:wrap; color:#64748b; }
+        #invLightbox .variant-row .vr-meta span { white-space:nowrap; }
+    </style>
+    <script>
+    (function() {
+        var overlay = document.createElement('div');
+        overlay.id = 'invLightboxOverlay';
+        overlay.innerHTML = '<div id="invLightbox"><div class="ilb-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>';
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) overlay.classList.remove('active');
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') overlay.classList.remove('active');
+        });
+
+        function showLoading() {
+            overlay.classList.add('active');
+            document.getElementById('invLightbox').innerHTML =
+                '<div class="ilb-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+        }
+
+        function row(label, value, cls) {
+            return '<div class="ilb-row"><span class="ilb-label">'+label+'</span><span class="ilb-val'+(cls?' '+cls:'')+'">'+value+'</span></div>';
+        }
+
+        window.openProductLightbox = async function(productId) {
+            showLoading();
+            try {
+                // Fetch product + variants + sale data in parallel
+                const [pRes, vRes, siRes] = await Promise.all([
+                    supabaseClient.from('products').select('*').eq('id', productId).maybeSingle(),
+                    supabaseClient.from('product_variants').select('*').eq('product_id', productId).eq('is_active', true).order('variant_name'),
+                    supabaseClient.from('sale_items').select('quantity, unit_price, cost_price, sale_id').eq('product_id', productId)
+                ]);
+
+                const p = pRes.data;
+                const variants = vRes.data || [];
+                const saleItems = siRes.data || [];
+
+                if (!p) { document.getElementById('invLightbox').innerHTML = '<div class="ilb-loading">Product not found</div>'; return; }
+
+                // Calculate financials
+                const totalUnitsSold = saleItems.reduce((s,i) => s + (parseFloat(i.quantity)||0), 0);
+                const totalRevenue   = saleItems.reduce((s,i) => s + (parseFloat(i.unit_price)||0) * (parseFloat(i.quantity)||0), 0);
+                const totalCOGS      = saleItems.reduce((s,i) => {
+                    var c = (i.cost_price !== null && i.cost_price !== undefined) ? parseFloat(i.cost_price) : parseFloat(p.cost_price||0);
+                    return s + c * (parseFloat(i.quantity)||0);
+                }, 0);
+                const totalProfit    = totalRevenue - totalCOGS;
+                const markup         = totalCOGS > 0 ? (totalProfit / totalCOGS * 100).toFixed(1)+'%' : '—';
+
+                // Days in stock
+                const createdAt = new Date(p.created_at || Date.now());
+                const daysInStock = Math.floor((Date.now() - createdAt.getTime()) / (1000*60*60*24));
+
+                // Current stock
+                const variantStock = variants.reduce((s,v) => s + (parseInt(v.stock)||0), 0);
+                const totalStock   = (parseInt(p.stock)||0) + variantStock;
+
+                // Base cost/sell
+                const baseCp = parseFloat(p.cost_price)||0;
+                const baseSp = parseFloat(p.selling_price)||0;
+                const baseMargin = baseCp > 0 ? ((baseSp - baseCp) / baseCp * 100).toFixed(1)+'%' : '—';
+
+                // Total stock cost & sell value (base + each variant at their own prices)
+                const baseStock = parseInt(p.stock) || 0;
+                let totalStockCost = baseStock * baseCp;
+                let totalStockSell = baseStock * baseSp;
+                variants.forEach(function(v) {
+                    const vStock = parseInt(v.stock) || 0;
+                    totalStockCost += vStock * (parseFloat(v.cost_price) || 0);
+                    totalStockSell += vStock * (parseFloat(v.price) || 0);
+                });
+
+                // Variants HTML
+                var variantsHtml = '';
+                if (variants.length > 0) {
+                    variantsHtml = '<div class="ilb-section">Variants ('+variants.length+')</div>';
+                    variantsHtml += variants.map(function(v) {
+                        var vCp = parseFloat(v.cost_price)||0;
+                        var vSp = parseFloat(v.price)||0;
+                        var vMgn = vCp > 0 ? ((vSp - vCp)/vCp*100).toFixed(1)+'%' : '—';
+                        // Variant sales
+                        var vSaleItems = saleItems.filter(si => si.sale_id && true); // all items attributed to product
+                        var attrs = v.attributes || {};
+                        if (typeof attrs === 'string') { try { attrs = JSON.parse(attrs); } catch(e){ attrs={}; } }
+                        var attrStr = Object.entries(attrs)
+                            .filter(function(e){ return !['variant_images','product_images','product_image','variant_group'].includes(e[0]) && typeof e[1] !== 'object'; })
+                            .map(function(e){ return e[0]+': '+e[1]; }).join(' · ') || '';
+                        return '<div class="variant-row">'+
+                            '<div class="vr-name">'+v.variant_name+(attrStr ? ' <small style="font-weight:400;color:#94a3b8;">'+attrStr+'</small>' : '')+'</div>'+
+                            '<div class="vr-meta">'+
+                                '<span>📦 Stock: <strong>'+v.stock+'</strong></span>'+
+                                '<span>💰 CP: <strong>'+formatCurrency(vCp)+'</strong></span>'+
+                                '<span>🏷️ SP: <strong>'+formatCurrency(vSp)+'</strong></span>'+
+                                '<span>📈 Margin: <strong>'+vMgn+'</strong></span>'+
+                            '</div>'+
+                        '</div>';
+                    }).join('');
+                }
+
+                document.getElementById('invLightbox').innerHTML =
+                    '<div class="ilb-header">'+
+                        '<img src="'+(p.product_image||'https://via.placeholder.com/60?text=?')+'" alt="">'+
+                        '<div>'+
+                            '<div class="ilb-title">'+p.product_name+'</div>'+
+                            '<div class="ilb-sub">'+
+                                (p.type||'General')+' · SKU: '+(p.sku||'N/A')+
+                                (variants.length ? ' · '+variants.length+' variant'+(variants.length>1?'s':'') : '')+
+                            '</div>'+
+                        '</div>'+
+                        '<button class="ilb-close" onclick="document.getElementById(\'invLightboxOverlay\').classList.remove(\'active\')">×</button>'+
+                    '</div>'+
+                    '<div class="ilb-body">'+
+
+                        '<div class="ilb-section">Current Stock</div>'+
+                        row('Total Units in Stock', '<strong style="font-size:1.1rem;">'+totalStock+'</strong>', 'blue')+
+                        row('Days Since Added', daysInStock+' days', '')+
+                        row('Total Units Ever Sold', totalUnitsSold+' units', '')+
+                        row('Total Stock Cost (est.)', formatCurrency(totalStockCost), '')+
+                        row('Total Stock Value (est.)', formatCurrency(totalStockSell), 'green')+
+                        row('Potential Profit if Sold', formatCurrency(totalStockSell - totalStockCost), totalStockSell >= totalStockCost ? 'green' : 'red')+
+
+                        '<div class="ilb-section">Base Product Pricing</div>'+
+                        row('Cost Price', formatCurrency(baseCp), '')+
+                        row('Selling Price', formatCurrency(baseSp), '')+
+                        row('Markup', baseMargin, parseFloat(baseMargin)>0?'green':'red')+
+                        row('Base Stock', p.stock+' units', '')+
+
+                        '<div class="ilb-section">Sales Performance (All Time)</div>'+
+                        row('Units Sold', totalUnitsSold, '')+
+                        row('Total Revenue', formatCurrency(totalRevenue), 'green')+
+                        row('Total COGS', formatCurrency(totalCOGS), '')+
+                        row('Gross Profit', formatCurrency(totalProfit), totalProfit>=0?'green':'red')+
+                        row('Markup %', markup, parseFloat(markup)>0?'green':'red')+
+
+                        variantsHtml+
+
+                        '<div class="ilb-section">Actions</div>'+
+                        '<div style="display:flex;gap:8px;margin-top:8px;">'+
+                            '<button onclick="window.inventoryManager.showEditModal(\''+p.id+'\');document.getElementById(\'invLightboxOverlay\').classList.remove(\'active\')" class="btn btn-sm btn-primary" style="flex:1;"><i class="fas fa-edit"></i> Edit Product</button>'+
+                            '<a href="sales.html" class="btn btn-sm btn-success" style="flex:1;text-align:center;"><i class="fas fa-chart-bar"></i> Sales Report</a>'+
+                        '</div>'+
+                    '</div>';
+
+            } catch(e) {
+                console.error(e);
+                document.getElementById('invLightbox').innerHTML = '<div class="ilb-loading">Error loading product details</div>';
+            }
+        };
+
+        // Click delegation — open lightbox on row click, but not on action buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('#invLightboxOverlay')) return;
+            if (e.target.closest('.action-buttons')) return;
+            if (e.target.closest('.edit-product-btn, .delete-product-btn, .product-checkbox')) return;
+            var row = e.target.closest('#inventoryTable tr[data-product-id]');
+            if (row) {
+                window.openProductLightbox(row.getAttribute('data-product-id'));
+            }
+        });
+    })();
+    </script>
+
+</body>
+
+</html>
